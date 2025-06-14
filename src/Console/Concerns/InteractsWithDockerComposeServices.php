@@ -13,14 +13,9 @@ trait InteractsWithDockerComposeServices
      * @var array<string>
      */
     protected $services = [
-        'mysql',
         'pgsql',
-        'mariadb',
-        'mongodb',
         'redis',
         'valkey',
-        'memcached',
-        'meilisearch',
         'typesense',
         'minio',
         'mailpit',
@@ -34,7 +29,7 @@ trait InteractsWithDockerComposeServices
      *
      * @var string[]
      */
-    protected $defaultServices = ['mysql', 'redis', 'selenium', 'mailpit'];
+    protected $defaultServices = ['redis', 'selenium', 'mailpit'];
 
     /**
      * Gather the desired Sail services using an interactive prompt.
@@ -47,7 +42,7 @@ trait InteractsWithDockerComposeServices
             return \Laravel\Prompts\multiselect(
                 label: 'Which services would you like to install?',
                 options: $this->services,
-                default: ['mysql'],
+                default: ['pgsql'],
             );
         }
 
@@ -67,11 +62,6 @@ trait InteractsWithDockerComposeServices
         $compose = file_exists($composePath)
             ? Yaml::parseFile($composePath)
             : Yaml::parse(file_get_contents(__DIR__ . '/../../../stubs/docker-compose.stub'));
-
-        // Prepare the installation of the "mariadb-client" package if the MariaDB service is used...
-        if (in_array('mariadb', $services)) {
-            $compose['services']['laravel.test']['build']['args']['MYSQL_CLIENT'] = 'mariadb-client';
-        }
 
         // Adds the new services as dependencies of the laravel.test service...
         if (! array_key_exists('laravel.test', $compose['services'])) {
@@ -95,7 +85,7 @@ trait InteractsWithDockerComposeServices
         // Merge volumes...
         collect($services)
             ->filter(function ($service) {
-                return in_array($service, ['mysql', 'pgsql', 'mariadb', 'mongodb', 'redis', 'valkey', 'meilisearch', 'typesense', 'minio', 'rabbitmq']);
+                return in_array($service, ['pgsql', 'redis', 'valkey', 'typesense', 'minio', 'rabbitmq']);
             })->filter(function ($service) use ($compose) {
                 return ! array_key_exists($service, $compose['volumes'] ?? []);
             })->each(function ($service) use (&$compose) {
@@ -124,9 +114,8 @@ trait InteractsWithDockerComposeServices
     {
         $environment = file_get_contents($this->laravel->basePath('.env'));
 
-        if (in_array('mysql', $services) ||
-            in_array('mariadb', $services) ||
-            in_array('pgsql', $services)) {
+        if (in_array('pgsql', $services))
+        {
             $defaults = [
                 '# DB_HOST=127.0.0.1',
                 '# DB_PORT=3306',
@@ -140,27 +129,14 @@ trait InteractsWithDockerComposeServices
             }
         }
 
-        if (in_array('mysql', $services)) {
-            $environment = preg_replace('/DB_CONNECTION=.*/', 'DB_CONNECTION=mysql', $environment);
-            $environment = str_replace('DB_HOST=127.0.0.1', "DB_HOST=mysql", $environment);
-        }elseif (in_array('pgsql', $services)) {
+        if (in_array('pgsql', $services)) {
             $environment = preg_replace('/DB_CONNECTION=.*/', 'DB_CONNECTION=pgsql', $environment);
             $environment = str_replace('DB_HOST=127.0.0.1', "DB_HOST=pgsql", $environment);
             $environment = str_replace('DB_PORT=3306', "DB_PORT=5432", $environment);
-        } elseif (in_array('mariadb', $services)) {
-            if ($this->laravel->config->has('database.connections.mariadb')) {
-                $environment = preg_replace('/DB_CONNECTION=.*/', 'DB_CONNECTION=mariadb', $environment);
-            }
-
-            $environment = str_replace('DB_HOST=127.0.0.1', "DB_HOST=mariadb", $environment);
         }
 
         $environment = str_replace('DB_USERNAME=root', "DB_USERNAME=sail", $environment);
         $environment = preg_replace("/DB_PASSWORD=(.*)/", "DB_PASSWORD=password", $environment);
-
-        if (in_array('memcached', $services)) {
-            $environment = str_replace('MEMCACHED_HOST=127.0.0.1', 'MEMCACHED_HOST=memcached', $environment);
-        }
 
         if (in_array('redis', $services)) {
             $environment = str_replace('REDIS_HOST=127.0.0.1', 'REDIS_HOST=redis', $environment);
@@ -168,17 +144,6 @@ trait InteractsWithDockerComposeServices
 
         if (in_array('valkey',$services)){
             $environment = str_replace('REDIS_HOST=127.0.0.1', 'REDIS_HOST=valkey', $environment);
-        }
-
-        if (in_array('mongodb', $services)) {
-            $environment .= "\nMONGODB_URI=mongodb://mongodb:27017";
-            $environment .= "\nMONGODB_DATABASE=laravel";
-        }
-
-        if (in_array('meilisearch', $services)) {
-            $environment .= "\nSCOUT_DRIVER=meilisearch";
-            $environment .= "\nMEILISEARCH_HOST=http://meilisearch:7700\n";
-            $environment .= "\nMEILISEARCH_NO_ANALYTICS=false\n";
         }
 
         if (in_array('typesense', $services)) {

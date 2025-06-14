@@ -56,34 +56,8 @@ function display_help {
     echo "  ${GREEN}sail composer ...${NC}                       Run a Composer command"
     echo "  ${GREEN}sail composer require laravel/sanctum${NC}"
     echo
-    echo "${YELLOW}Node Commands:${NC}"
-    echo "  ${GREEN}sail node ...${NC}         Run a Node command"
-    echo "  ${GREEN}sail node --version${NC}"
-    echo
-    echo "${YELLOW}NPM Commands:${NC}"
-    echo "  ${GREEN}sail npm ...${NC}        Run a npm command"
-    echo "  ${GREEN}sail npx${NC}            Run a npx command"
-    echo "  ${GREEN}sail npm run prod${NC}"
-    echo
-    echo "${YELLOW}PNPM Commands:${NC}"
-    echo "  ${GREEN}sail pnpm ...${NC}        Run a pnpm command"
-    echo "  ${GREEN}sail pnpx${NC}            Run a pnpx command"
-    echo "  ${GREEN}sail pnpm run prod${NC}"
-    echo
-    echo "${YELLOW}Yarn Commands:${NC}"
-    echo "  ${GREEN}sail yarn ...${NC}        Run a Yarn command"
-    echo "  ${GREEN}sail yarn run prod${NC}"
-    echo
-    echo "${YELLOW}Bun Commands:${NC}"
-    echo "  ${GREEN}sail bun ...${NC}        Run a bun command"
-    echo "  ${GREEN}sail bunx${NC}           Run a bunx command"
-    echo "  ${GREEN}sail bun run prod${NC}"
-    echo
     echo "${YELLOW}Database Commands:${NC}"
-    echo "  ${GREEN}sail mysql${NC}     Start a MySQL CLI session within the 'mysql' container"
-    echo "  ${GREEN}sail mariadb${NC}   Start a MySQL CLI session within the 'mariadb' container"
     echo "  ${GREEN}sail psql${NC}      Start a PostgreSQL CLI session within the 'pgsql' container"
-    echo "  ${GREEN}sail mongodb${NC}   Start a Mongo Shell session within the 'mongodb' container"
     echo "  ${GREEN}sail redis${NC}     Start a Redis CLI session within the 'redis' container"
     echo "  ${GREEN}sail valkey${NC}    Start a Valkey CLI session within the 'valkey' container"
     echo
@@ -385,128 +359,6 @@ elif [ "$1" == "tinker" ]; then
         sail_is_not_running
     fi
 
-# Proxy Node commands to the "node" binary on the application container...
-elif [ "$1" == "node" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" node)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy NPM commands to the "npm" binary on the application container...
-elif [ "$1" == "npm" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" npm)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy NPX commands to the "npx" binary on the application container...
-elif [ "$1" == "npx" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" npx)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy PNPM commands to the "pnpm" binary on the application container...
-elif [ "$1" == "pnpm" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" pnpm)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy PNPX commands to the "pnpx" binary on the application container...
-elif [ "$1" == "pnpx" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" pnpx)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy Yarn commands to the "yarn" binary on the application container...
-elif [ "$1" == "yarn" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" yarn)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy Bun commands to the "bun" binary on the application container...
-elif [ "$1" == "bun" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" bun)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy Bun X commands to the "bunx" binary on the application container...
-elif [ "$1" == "bunx" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u "$APP_USER")
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" bunx)
-    else
-        sail_is_not_running
-    fi
-
-# Initiate a MySQL CLI terminal session within the "mysql" container...
-elif [ "$1" == "mysql" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=(mysql bash -c)
-        ARGS+=("MYSQL_PWD=\${MYSQL_PASSWORD} mysql -u \${MYSQL_USER} \${MYSQL_DATABASE}")
-    else
-        sail_is_not_running
-    fi
-
-# Initiate a MySQL CLI terminal session within the "mariadb" container...
-elif [ "$1" == "mariadb" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=(mariadb bash -c)
-        ARGS+=("MYSQL_PWD=\${MYSQL_PASSWORD} mariadb -u \${MYSQL_USER} \${MYSQL_DATABASE}")
-    else
-        sail_is_not_running
-    fi
-
 # Initiate a PostgreSQL CLI terminal session within the "pgsql" container...
 elif [ "$1" == "psql" ]; then
     shift 1
@@ -540,18 +392,6 @@ elif [ "$1" == "root-shell" ] || [ "$1" == "root-bash" ]; then
         ARGS+=(exec -u root)
         [ ! -t 0 ] && ARGS+=(-T)
         ARGS+=("$APP_SERVICE" bash)
-    else
-        sail_is_not_running
-    fi
-
-# Initiate a MongoDB Shell within the "mongodb" container...
-elif [ "$1" == "mongodb" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=(mongodb mongosh --port "${FORWARD_MONGODB_PORT:-27017}" --username "$MONGODB_USERNAME" --password "$MONGODB_PASSWORD" --authenticationDatabase admin)
     else
         sail_is_not_running
     fi
